@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marriage Risk-Reduction App</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --accent:#10b981; --danger:#ef4444; --warn:#f59e0b; --border:#1f2937; }
+    body { margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); }
+    .wrap { max-width:1100px; margin:0 auto; padding:24px; }
+    h1,h2,h3 { margin:12px 0; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin:16px 0; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    .cols-3 { display:grid; grid-template-columns: repeat(3,1fr); gap:16px; }
+    @media (max-width:900px) { .grid{ grid-template-columns:1fr; } .cols-3{ grid-template-columns:1fr; } }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    label { font-weight:600; }
+    select, input[type="number"], input[type="range"] { padding:10px; border-radius:10px; border:1px solid var(--border); background:#0b1220; color:var(--text); }
+    .section-title { font-size:1.1rem; font-weight:700; margin-bottom:8px; }
+    .btns { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
+    button { background:var(--accent); color:#062a22; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
+    button.secondary { background:#1f2937; color:var(--text); }
+    button.danger { background:var(--danger); color:#fff; }
+    .result { display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
+    .pill { padding:10px 14px; border-radius:999px; border:1px solid var(--border); }
+    .good { background:rgba(16,185,129,0.15); }
+    .bad  { background:rgba(239,68,68,0.15); }
+    .bar { height:16px; background:#0b1220; border:1px solid var(--border); border-radius:999px; overflow:hidden; }
+    .bar > div { height:100%; background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981); width:0%; transition:width 400ms ease; }
+    .note { color:var(--muted); font-size:.9rem; }
+    .rec-list li { margin:6px 0; }
+    .slider-row { display:grid; grid-template-columns: 240px 1fr 60px; gap:12px; align-items:center; }
+    .legend { display:flex; gap:12px; flex-wrap:wrap; margin:8px 0; }
+    .legend span { display:flex; align-items:center; gap:8px; }
+    .dot { width:12px; height:12px; border-radius:50%; display:inline-block; }
+    .dot.low { background:#3b82f6; }
+    .dot.med { background:#f59e0b; }
+    .dot.high { background:#ef4444; }
+    .footer { color:var(--muted); font-size:.85rem; margin-top:12px; }
+    .hr { border-top:1px dashed var(--border); margin:12px 0; }
+    .tag { display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:.85rem; color:var(--muted); }
+    @media print { button { display:none; } .card { page-break-inside: avoid; } body { background:#fff; color:#000; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Marriage Risk-Reduction App</h1>
+    <p class="note">Private and local: nothing leaves your device. This app estimates success based on age, alignment, deal-breakers, and preparedness, plus your base assumptions for infidelity, divorce, and overlap sensitivity. Best-case success is capped near ~67% to reflect realistic upper bounds.</p>
+
+    <div class="card">
+      <h2>Partner inputs</h2>
+      <div class="grid">
+        <div>
+          <div class="section-title">Partner A</div>
+          <div class="field">
+            <label>Age at marriage</label>
+            <input type="number" id="ageA" min="18" max="80" placeholder="e.g., 30"/>
+          </div>
+          <div class="field">
+            <label>Children</label>
+            <select id="childrenA"><option>Yes</option><option>No</option><option>Unsure</option></select>
+          </div>
+          <div class="field">
+            <label>Career priority</label>
+            <select id="careerA"><option>High</option><option>Moderate</option><option>Low</option></select>
+          </div>
+          <div class="field">
+            <label>Lifestyle</label>
+            <select id="lifeA"><option>Urban</option><option>Suburban</option><option>Rural</option></select>
+          </div>
+          <div class="field">
+            <label>Religion/spirituality</label>
+            <select id="religionA"><option>Aligned</option><option>Partially aligned</option><option>Not aligned</option></select>
+          </div>
+          <div class="field">
+            <label>Fidelity expectations</label>
+            <select id="fidelityA"><option>Strict exclusivity</option><option>Flexible</option><option>Other</option></select>
+          </div>
+          <div class="field">
+            <label>Financial transparency</label>
+            <select id="financeA"><option>Full</option><option>Partial</option><option>Separate</option></select>
+          </div>
+          <div class="field">
+            <label>Substance use</label>
+            <select id="substanceA"><option>Acceptable</option><option>Not acceptable</option></select>
+          </div>
+          <div class="field">
+            <label>Conflict style</label>
+            <select id="conflictA"><option>Calm</option><option>Direct</option><option>Avoidant</option><option>Explosive</option></select>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">Partner B</div>
+          <div class="field">
+            <label>Age at marriage</label>
+            <input type="number" id="ageB" min="18" max="80" placeholder="e.g., 31"/>
+          </div>
+          <div class="field">
+            <label>Children</label>
+            <select id="childrenB"><option>Yes</option><option>No</option><option>Unsure</option></select>
+          </div>
+          <div class="field">
+            <label>Career priority</label>
+            <select id="careerB"><option>High</option><option>Moderate</option><option>Low</option></select>
+          </div>
+          <div class="field">
+            <label>Lifestyle</label>
+            <select id="lifeB"><option>Urban</option><option>Suburban</option><option>Rural</option></select>
+          </div>
+          <div class="field">
+            <label>Religion/spirituality</label>
+            <select id="religionB"><option>Aligned</option><option>Partially aligned</option><option>Not aligned</option></select>
+          </div>
+          <div class="field">
+            <label>Fidelity expectations</label>
+            <select id="fidelityB"><option>Strict exclusivity</option><option>Flexible</option><option>Other</option></select>
+          </div>
+          <div class="field">
+            <label>Financial transparency</label>
+            <select id="financeB"><option>Full</option><option>Partial</option><option>Separate</option></select>
+          </div>
+          <div class="field">
+            <label>Substance use</label>
+            <select id="substanceB"><option>Acceptable</option><option>Not acceptable</option></select>
+          </div>
+          <div class="field">
+            <label>Conflict style</label>
+            <select id="conflictB"><option>Calm</option><option>Direct</option><option>Avoidant</option><option>Explosive</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Preparedness (shared)</h2>
+      <div class="cols-3">
+        <div class="field">
+          <label>Premarital counseling</label>
+          <select id="counseling"><option>Yes</option><option>No</option><option>Planned</option></select>
+        </div>
+        <div class="field">
+          <label>Communication training</label>
+          <select id="comm"><option>Yes</option><option>No</option></select>
+        </div>
+        <div class="field">
+          <label>Financial planning</label>
+          <select id="finplan"><option>Joint budget</option><option>Separate</option><option>None</option></select>
+        </div>
+        <div class="field">
+          <label>Mental health readiness</label>
+          <select id="mental"><option>Stable</option><option>Needs support</option><option>Unknown</option></select>
+        </div>
+      </div>
+      <div class="btns">
+        <button id="calc">Calculate success</button>
+        <button class="secondary" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Assumption sliders (base rates)</h2>
+      <div class="slider-row">
+        <label>Base infidelity rate (%)</label>
+        <input type="range" id="baseInf" min="25" max="70" step="1" value="60"/>
+        <span id="baseInfVal" class="tag">60%</span>
+      </div>
+      <div class="slider-row">
+        <label>Base divorce rate (%)</label>
+        <input type="range" id="baseDiv" min="41" max="60" step="1" value="47"/>
+        <span id="baseDivVal" class="tag">47%</span>
+      </div>
+      <p class="note">These represent your starting assumptions before the app applies risk-reduction from age, alignment, deal-breakers, and preparedness.</p>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div class="result">
+        <div class="pill good" id="succPill">Success rate: —</div>
+        <div class="pill bad" id="failPill">Failure rate: —</div>
+      </div>
+      <div class="bar" style="margin-top:12px;">
+        <div id="barFill"></div>
+      </div>
+      <p class="note" style="margin-top:10px;">Best-case success is capped at ~67% to reflect realistic upper bounds.</p>
+    </div>
+
+    <div class="card">
+      <h2>Sensitivity chart (overlap assumptions)</h2>
+      <div class="legend">
+        <span><i class="dot low"></i> Low overlap (20%)</span>
+        <span><i class="dot med"></i> Medium overlap (30%)</span>
+        <span><i class="dot high"></i> High overlap (40%)</span>
+      </div>
+      <canvas id="chart" height="120"></canvas>
+      <p class="note">The chart shows failure rates across assumptions after applying your inputs. Success = 100 − failure.</p>
+    </div>
+
+    <div class="card">
+      <h2>Personalized recommendations</h2>
+      <ul id="recs" class="rec-list"></ul>
+      <div class="btns">
+        <button id="printBtn">Print or save PDF</button>
+        <button class="secondary" id="saveBtn">Save answers (local)</button>
+        <button class="danger" id="clearBtn">Clear saved data</button>
+      </div>
+      <div class="footer">Storage is local-only via your browser. Printing uses your browser’s print-to-PDF.</div>
+    </div>
+
+    <div class="card">
+      <h3>What improves your odds</h3>
+      <ul>
+        <li><strong>Age window:</strong> Marrying ~29–35 improves outcomes; marrying <25 increases risk.</li>
+        <li><strong>Goals alignment:</strong> Clear agreement on children, lifestyle, career, religion.</li>
+        <li><strong>Deal-breakers clarity:</strong> Explicit fidelity and finance boundaries reduce ambiguity.</li>
+        <li><strong>Preparedness:</strong> Counseling, communication skills, financial planning, mental health stability.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <script>
+    const el = id => document.getElementById(id);
+
+    // Local storage helpers
+    const LS_KEY = 'marriageRiskApp_v2';
+    function saveLocal() {
+      const ids = ['ageA','ageB','childrenA','childrenB','careerA','careerB','lifeA','lifeB','religionA','religionB',
+                   'fidelityA','fidelityB','financeA','financeB','substanceA','substanceB','conflictA','conflictB',
+                   'counseling','comm','finplan','mental','baseInf','baseDiv'];
+      const data = {};
+      ids.forEach(id => data[id] = el(id).value);
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      alert('Saved locally.');
+    }
+    function loadLocal() {
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      Object.entries(data).forEach(([id,val]) => {
+        if (el(id)) el(id).value = val;
+      });
+      el('baseInfVal').textContent = `${el('baseInf').value}%`;
+      el('baseDivVal').textContent = `${el('baseDiv').value}%`;
+    }
+    function clearLocal() {
+      localStorage.removeItem(LS_KEY);
+      alert('Cleared local data.');
+    }
+
+    // Age bonus logic
+    function bandAgeBonus(a, b){
+      const ageBand = (x)=>{
+        if (!x || isNaN(x)) return "unknown";
+        if (x < 25) return "lt25";
+        if (x <= 28) return "25_28";
+        if (x <= 35) return "29_35";
+        if (x >= 36) return "36p";
+        return "25_28";
+      };
+      const A = ageBand(a), B = ageBand(b);
+      if (A === "lt25" || B === "lt25") return -10;
+      if (A === "29_35" && B === "29_35") return +10;
+      if ((A === "29_35" && B !== "lt25") || (B === "29_35" && A !== "lt25")) return +7;
+      if (A === "36p" && B === "36p") return +5;
+      return 0;
+    }
+
+    // Alignment and deal-breakers mismatch count
+    function countMismatches(valuesA, valuesB){
+      let mismatches = 0;
+      valuesA.forEach((v,i) => { if (v !== valuesB[i]) mismatches++; });
+      return mismatches;
+    }
+    function alignmentBonus(){
+      const goalsA = [el('childrenA').value, el('careerA').value, el('lifeA').value, el('religionA').value];
+      const goalsB = [el('childrenB').value, el('careerB').value, el('lifeB').value, el('religionB').value];
+      const mismatches = countMismatches(goalsA, goalsB);
+      if (mismatches === 0) return +10;
+      if (mismatches <= 2) return 0;
+      return -15;
+    }
+    function dealBreakerBonus(){
+      const dealA = [el('fidelityA').value, el('financeA').value, el('substanceA').value, el('conflictA').value];
+      const dealB = [el('fidelityB').value, el('financeB').value, el('substanceB').value, el('conflictB').value];
+      const mismatches = countMismatches(dealA, dealB);
+      if (mismatches === 0) return +10;
+      if (mismatches <= 2) return 0;
+      return -15;
+    }
+    function preparednessBonus(){
+      const counseling = el('counseling').value;
+      const comm = el('comm').value;
+      const finplan = el('finplan').value;
+      const mental = el('mental').value;
+
+      const allStrong = (counseling !== 'No') && (comm === 'Yes') && (finplan === 'Joint budget') && (mental === 'Stable');
+      const some = (counseling !== 'No') || (comm === 'Yes') || (finplan === 'Joint budget') || (mental === 'Stable');
+
+      if (allStrong) return +15;
+      if (some) return +5;
+      return 0;
+    }
+
+    function clamp(val, min, max){ return Math.max(min, Math.min(max, val)); }
+
+    // Convert bonuses into reductions on base infidelity/divorce
+    function adjustedRates(baseInf, baseDiv, totalBonus) {
+      // Heuristic coefficients: totalBonus reduces infidelity and divorce
+      // Reflects larger effect on divorce via conflict-prevention, etc.
+      const infAdj = clamp(baseInf - totalBonus * 0.30, 5, 95);
+      const divAdj = clamp(baseDiv - totalBonus * 0.40, 5, 95);
+      return { infAdj, divAdj };
+    }
+
+    function combinedFailure(inf, div, overlapShare) {
+      // Formula: infidelity + divorce − overlapShare*divorce
+      const fail = inf + div - (overlapShare * div);
+      return clamp(fail, 0, 100);
+    }
+
+    // Chart
+    let chart;
+    function initChart() {
+      const ctx = el('chart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Conservative','Moderate','Expansive','High'],
+          datasets: [
+            { label:'Low overlap (20%)', data:[0,0,0,0], borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3 },
+            { label:'Medium overlap (30%)', data:[0,0,0,0], borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:0.3 },
+            { label:'High overlap (40%)', data:[0,0,0,0], borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { min: 0, max: 100, title: { display: true, text: 'Failure rate (%)' } },
+            x: { title: { display: true, text: 'Assumption breadth' } }
+          }
+        }
+      });
+    }
+
+    function updateChart(infAdj, divAdj) {
+      // Generate a spectrum by scaling base rates across breadth (conceptual progression)
+      // Conservative: slightly narrower definitions (−15% inf, −10% div relative to adjusted baselines)
+      // Moderate: adjusted baselines
+      // Expansive: +10% inf, +5% div
+      // High: +15% inf, +10% div
+      const spectrum = [
+        { inf: clamp(infAdj * 0.85, 0, 100), div: clamp(divAdj * 0.90, 0, 100) },
+        { inf: infAdj, div: divAdj },
+        { inf: clamp(infAdj * 1.10, 0, 100), div: clamp(divAdj * 1.05, 0, 100) },
+        { inf: clamp(infAdj * 1.15, 0, 100), div: clamp(divAdj * 1.10, 0, 100) },
+      ];
+      const overlaps = [0.20, 0.30, 0.40];
+
+      overlaps.forEach((ov, i) => {
+        chart.data.datasets[i].data = spectrum.map(p => combinedFailure(p.inf, p.div, ov));
+      });
+      chart.update();
+    }
+
+    function recommendations() {
+      const recs = [];
+      const ageA = parseInt(el('ageA').value, 10);
+      const ageB = parseInt(el('ageB').value, 10);
+
+      // Age
+      if (!isNaN(ageA) && !isNaN(ageB)) {
+        const ageBonus = bandAgeBonus(ageA, ageB);
+        if (ageBonus <= 0) {
+          recs.push('Consider timing: marrying in the 29–35 range is associated with better outcomes.');
+        } else {
+          recs.push('Your age window is favorable (29–35 or mature pairing). Maintain deliberate pacing.');
+        }
+      } else {
+        recs.push('Add ages for both partners to personalize timing guidance.');
+      }
+
+      // Goals alignment
+      const goalsA = [el('childrenA').value, el('careerA').value, el('lifeA').value, el('religionA').value];
+      const goalsB = [el('childrenB').value, el('careerB').value, el('lifeB').value, el('religionB').value];
+      const gMis = countMismatches(goalsA, goalsB);
+      if (gMis === 0) recs.push('Strong goals alignment. Keep a quarterly check-in to reaffirm plans.');
+      else if (gMis <= 2) recs.push('Moderate goals misalignment. Schedule a values conversation to resolve differences (children, career, lifestyle, religion).');
+      else recs.push('Significant goals misalignment. Try premarital counseling focused on vision and values before proceeding.');
+
+      // Deal-breakers
+      const dealA = [el('fidelityA').value, el('financeA').value, el('substanceA').value, el('conflictA').value];
+      const dealB = [el('fidelityB').value, el('financeB').value, el('substanceB').value, el('conflictB').value];
+      const dMis = countMismatches(dealA, dealB);
+      if (dMis === 0) recs.push('Clear deal-breaker alignment. Document your agreements (fidelity, finances, substance boundaries, conflict rules).');
+      else if (dMis <= 2) recs.push('Some deal-breaker differences. Clarify boundaries and write a joint “relationship charter.”');
+      else recs.push('Major deal-breaker conflicts. Address with a therapist/mediator to prevent volatility.');
+
+      // Preparedness
+      const counseling = el('counseling').value;
+      const comm = el('comm').value;
+      const finplan = el('finplan').value;
+      const mental = el('mental').value;
+
+      if (counseling === 'No') recs.push('Add premarital counseling to identify blind spots and create protocols.');
+      else recs.push('Premarital counseling planned/complete. Great—apply insights to boundaries and repair strategies.');
+
+      if (comm === 'No') recs.push('Take an evidence-based communication course together (active listening, soft start-ups, repair attempts).');
+      else recs.push('You’ve invested in communication skills. Keep weekly “state of the union” check-ins.');
+
+      if (finplan !== 'Joint budget') recs.push('Create a joint budget with transparency rules (spending thresholds, shared dashboard).');
+      else recs.push('Joint budget selected. Review monthly to prevent financial secrecy and resentment.');
+
+      if (mental !== 'Stable') recs.push('Prioritize mental health support (assessment, therapy, or coaching) before escalating commitments.');
+      else recs.push('Stable mental health. Maintain proactive check-ins and stress management routines.');
+
+      return recs;
+    }
+
+    function calc(){
+      const ageA = parseInt(el('ageA').value, 10);
+      const ageB = parseInt(el('ageB').value, 10);
+
+      const baseInf = parseFloat(el('baseInf').value);
+      const baseDiv = parseFloat(el('baseDiv').value);
+
+      let success = 16; // baseline average success
+      const bonusAge = bandAgeBonus(ageA, ageB);
+      const bonusAlign = alignmentBonus();
+      const bonusDeal = dealBreakerBonus();
+      const bonusPrep = preparednessBonus();
+      const totalBonus = bonusAge + bonusAlign + bonusDeal + bonusPrep;
+
+      // Convert bonuses into adjusted infidelity & divorce
+      const { infAdj, divAdj } = adjustedRates(baseInf, baseDiv, totalBonus);
+
+      // Medium overlap for headline; cap best-case success
+      const failureMid = combinedFailure(infAdj, divAdj, 0.30);
+      success = clamp(100 - failureMid, 5, 67);
+      const failure = clamp(100 - success, 33, 95);
+
+      el('succPill').textContent = `Success rate: ${success.toFixed(1)}% (best-case cap ~67%)`;
+      el('failPill').textContent = `Failure rate: ${failure.toFixed(1)}%`;
+      el('barFill').style.width = `${success}%`;
+
+      // Update chart for low/medium/high overlaps across spectrum
+      updateChart(infAdj, divAdj);
+
+      // Recommendations
+      const recs = recommendations();
+      const recList = el('recs');
+      recList.innerHTML = '';
+      recs.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = r;
+        recList.appendChild(li);
+      });
+    }
+
+    function reset(){
+      ['ageA','ageB','childrenA','childrenB','careerA','careerB','lifeA','lifeB','religionA','religionB',
+       'fidelityA','fidelityB','financeA','financeB','substanceA','substanceB','conflictA','conflictB',
+       'counseling','comm','finplan','mental'].forEach(id=>{
+        const node = el(id);
+        if (node.tagName === 'INPUT') node.value = '';
+        if (node.tagName === 'SELECT') node.selectedIndex = 0;
+      });
+      el('baseInf').value = 60; el('baseInfVal').textContent = '60%';
+      el('baseDiv').value = 47; el('baseDivVal').textContent = '47%';
+      el('succPill').textContent = 'Success rate: —';
+      el('failPill').textContent = 'Failure rate: —';
+      el('barFill').style.width = '0%';
+      el('recs').innerHTML = '';
+      updateChart(60, 47);
+    }
+
+    // Events
+    el('calc').addEventListener('click', calc);
+    el('reset').addEventListener('click', reset);
+    el('baseInf').addEventListener('input', e => { el('baseInfVal').textContent = `${e.target.value}%`; });
+    el('baseDiv').addEventListener('input', e => { el('baseDivVal').textContent = `${e.target.value}%`; });
+
+    el('printBtn').addEventListener('click', () => window.print());
+    el('saveBtn').addEventListener('click', saveLocal);
+    el('clearBtn').addEventListener('click', clearLocal);
+
+    // Init
+    loadLocal();
+    initChart();
+    updateChart(parseFloat(el('baseInf').value), parseFloat(el('baseDiv').value));
+  </script>
+</body>
+</html>
